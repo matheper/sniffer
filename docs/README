@@ -1,0 +1,9 @@
+http://pycap.sourceforge.net/
+
+requirements
+apt-get install libpcap0.8-dev
+apt-get install libnet1-dev
+
+
+execute capture.py with sudo
+sudo python capture.py
