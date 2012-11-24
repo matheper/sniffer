@@ -1,0 +1,16 @@
+ip.data         
+ip.fc           Traffic Class???
+ip.get_proto    
+ip.nxt          Next Header
+ip.pack_hdr     
+ip.set_proto   
+ip.udp          
+ip.v            Version
+ip.dst          Destination Address
+ip.flow         Flow Label
+ip.hlim         Hop Limit
+ip.pack
+ip.plen         Payload Length
+ip.src          Source Address
+ip.unpack
+ip.v_fc_flow

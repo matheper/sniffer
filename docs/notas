@@ -1,0 +1,17 @@
+http://software.opensuse.org/download.html?project=home:pstavirs:ostinato&package=ostinato
+
+http://www.secdev.org/projects/scapy/doc/installation.html
+
+sudo apt-get install libpcap-dev
+
+http://pycap.sourceforge.net/docs.html
+
+sudo apt-get install python-libpcap
+sudo apt-get install python-dpkt
+
+http://corelabs.coresecurity.com/index.php?module=Wiki&action=view&type=tool&name=Pcapy
+
+http://lost-and-found-narihiro.blogspot.com.br/2011/05/python-ubuntu1104-packet-capture-w.html
+http://www.stillhq.com/python/pcapy/
+
+http://www.secdev.org/projects/scapy/doc/
