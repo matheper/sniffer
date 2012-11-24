@@ -1,19 +1,26 @@
 # -*- coding:utf-8 -*-
 #!/usr/bin/python
 import sys
+import threading
 
 try:
     import pygtk
     pygtk.require("2.0")
 except:
-    print "Erro require pygtk >= 2.0"
+    print "Erro require pygtk >= 2.0."
     sys.exit(1)
 
 try:
     import gtk
     import gtk.glade
 except:
-    print "Erro ao importar o GTK"
+    print "Erro ao importar o GTK."
+    sys.exit(1)
+
+try:
+    from sniffer import Sniffer
+except:
+    print "Erro ao importar sniffer."
     sys.exit(1)
 
 class App(object):
@@ -30,6 +37,8 @@ class App(object):
         #Campo Tree
         self.lstConsulta = self.xml.get_widget("lstConsulta")
         self.lstConsulta.set_headers_visible(True)
+
+        self.sniffer = Sniffer()
     
     def start(self, widget, data):
         """ Start a capitura das pacotes
@@ -37,16 +46,17 @@ class App(object):
 
         #Formata controle lista
         self.ClearColunas()
-        types = [str,str,str]
-        dados = [('a','aa','aaa'),
-                 ('b','bb','bbb'),
-                 ('c','cc','ccc'),
-                 ('d','dd','ddd')]
-        self.lstConsulta.set_model(self.get_dados(dados, types))
+        self.listbox_types = [str,str,str,str,str,str,str,str]
+        self.listbox_data = self.sniffer.capture_list
+        self.lstConsulta.set_model(self.get_dados(self.listbox_data, self.listbox_types))
 
         #Cria colunas da lista
-        colunas = [('IP Origem',0),('IP Destino',1),('Tipo de Cabeçalho(s)',2)]
-        self.CriarColuna(colunas)
+        self.listbox_header = [('IP Origem',0),('IP Destino',1),('ID Próximo Cabeçalho',2),
+                               ('Próximo Cabeçalho',3),('Hop Limit',4),('ID Classe de Tráfego',5),
+                               ('Controle Classe',6), ('Descricao Classe',7)
+                              ]
+        self.CriarColuna(self.listbox_header)
+        self.sniffer.configure_device()
 
     def stop(self, widget, data):
         """ Stop a capitura das pacotes
@@ -57,6 +67,9 @@ class App(object):
         """ Filtra os pacotes
         """
         print 'filter ok'
+        self.sniffer.get_next_packet()
+        self.listbox_data = self.sniffer.capture_list
+        self.listbox_update()
 
     def quitMainWindow(self, widget, data):
         """
@@ -87,8 +100,12 @@ class App(object):
         retorno = gtk.ListStore(*types)
         for dado in dados:
             retorno.append(dado)
-        return retorno       
- 
+        return retorno
+
+    def listbox_update(self):
+        self.lstConsulta.set_model(self.get_dados(self.listbox_data, self.listbox_types))
+
+
 if __name__ == "__main__":
-    c = App()
+    app = App()
     gtk.main()
