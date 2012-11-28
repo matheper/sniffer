@@ -1,17 +1,17 @@
 # -*- coding: utf8 -*-
-import pcapy
-import dpkt
-import impacket.ImpactDecoder
+from scapy import all
+import netaddr
 
-class Sniffer( ):
+
+class Sniffer():
     """Sniffer class."""
 
     def __init__(self):
-
         self.capture_list = []
-
+        self.capture_dict = []
+        
         self.extension_header = {
-            0:"Hop-By-Hop Options Extension Header (note that this value was “Reserved” in IPv4)",
+            0:"Hop-By-Hop Options Extension Header",
             1:"ICMPv4",
             2:"IGMPv4",
             4:"IP in IP Encapsulation",
@@ -22,11 +22,13 @@ class Sniffer( ):
             43:"Routing Extension Header",
             44:"Fragmentation Extension Header",
             46:"Resource Reservation Protocol (RSVP)",
+            47:"GRE",
             50:"Encrypted Security Payload (ESP) Extension Header",
             51:"Authentication Header (AH) Extension Header",
             58:"ICMPv6",
             59:"No Next Header",
-            60:"Destination Options Extension Header"
+            60:"Destination Options Extension Header",
+            135:"Mobility Header"
         }
 
         self.traffic_dict = {
@@ -39,12 +41,6 @@ class Sniffer( ):
             6 : "Tráfego interativo",
             7 : "Tráfego de controle",
         }
-
-
-    def ip_addr(self, addr):
-        """Format ipv6 address."""
-        ip_address = "%.2x:%.2x:%.2x:%.2x:%.2x:%.2x" % (ord(addr[0]) , ord(addr[1]) , ord(addr[2]), ord(addr[3]), ord(addr[4]) , ord(addr[5]))
-        return ip_address
 
 
     def next_header_type(self, nxt):
@@ -60,44 +56,75 @@ class Sniffer( ):
             return (t_class, "Tráfego controlado por congestionamento", self.traffic_dict[t_class])
         elif t_class <= 15:
             return (t_class, "Tráfego não controlado por congestionamento", "")
-        return False;
+        return False
 
 
-    def recv_packets(self, header, data):
-        """Decodes packet."""
-        packet = impacket.ImpactDecoder.EthDecoder().decode(data)
-        eth = dpkt.ethernet.Ethernet(data)
-        ip = eth.data
-        dst = self.ip_addr(ip.dst)
-        src = self.ip_addr(ip.src)
-        next_header = self.next_header_type(ip.nxt)
-        hop_limit = ip.hlim
-        traffic_class = self.traffic_class_type(ip.fc)
-#        print packet
-#        print dst, src, next_header, hop_limit, traffic_class, "\n\n"
-        self.capture_list.append((src, dst, next_header[0], next_header[1], hop_limit,
-                                  traffic_class[0], traffic_class[1], traffic_class[2]))
-        print self.capture_list, "\n\n\n"
+    def analyze(self, packet):
+        pack_dict = {}
+        pack_dict['mac_src'] = packet.src
+        pack_dict['mac_dst'] = packet.dst
+        ip = packet.payload
+        pack_dict['ip_src'] = ip.src
+        pack_dict['ip_src_type'] = netaddr.IPAddress(ip.src).info['IPv6'][0]['allocation']
+        pack_dict['ip_dst'] = ip.dst
+        pack_dict['ip_dst_type'] = netaddr.IPAddress(ip.dst).info['IPv6'][0]['allocation']
+        pack_dict['ip_dst'] = ip.dst
+        pack_dict['hop_limit'] = ip.hlim
+        pack_dict['traffic_class'] = self.traffic_class_type(ip.tc)
+        pack_dict['flowlabel'] = ip.fl
+        pack_dict['version'] = ip.version
+
+        current = ip
+        next_header_list = []
+        while hasattr(current, 'nh'):
+            next_header_list.append(self.next_header_type(current.nh))
+            current = current.payload
+        pack_dict['next_header'] = next_header_list
+
+        self.capture_dict.append(pack_dict)
+
+        pack_tuple  = ( pack_dict['ip_src'], pack_dict['ip_src_type'], pack_dict['ip_dst'],
+                        pack_dict['ip_dst_type'], pack_dict['next_header'],
+                        pack_dict['hop_limit'], pack_dict['traffic_class'][0],
+                        pack_dict['traffic_class'][1], pack_dict['traffic_class'][2],
+                        pack_dict['flowlabel'], pack_dict['version']
+                      )
+
+        self.capture_list.append(pack_tuple)
 
 
-    def configure_device(self):
-        pcapy.findalldevs()
-        dev = pcapy.findalldevs()[1]
-        self.cap = pcapy.open_live(dev , 65536 , 1 , 0)
-        self.cap.setfilter('ip6')
+    def get_packet(self, sniff_filter = 'ip6'):
+        capture = all.sniff(filter = sniff_filter, count = 1)
+        packet = capture[0]
+        self.analyze(packet)
 
 
-    def get_next_packet(self):
-        (header, data) = self.cap.next()
-        self.recv_packets(header, data)
+    def read_file(self, filename):
+        capture = all.rdpcap(filename)
+        for packet in capture:
+            self.analyze(packet)
 
-    def capture(self):
-        pcapy.findalldevs()
-        dev = pcapy.findalldevs()[1]
-        
-        cap = pcapy.open_live(dev , 65536 , 1 , 0)
-        cap.setfilter('ip6')
 
-        while 1:
-            (header, data) = cap.next()
-            self.recv_packets(header, data)
+    def get_flow_packets(self, flowlabel):
+        flow_packets = []
+        flow_packets[:] = filter(lambda x: x[9] == flowlabel, self.capture_list)
+        return flow_packets
+
+
+    def parse_filter(src = '', operador = ''):
+        filtered_list = []
+        if src and dst:
+            ip_src = netaddr.IPAddress(src)
+            ip_dst = netaddr.IPAddress(dst)
+            filtered_list[:] = filter(lambda x: x[])
+
+
+#    def get_capture_list(self):
+#        return ( pack_dict['mac_src'], pack_dict['mac_dst'], pack_dict['ip_src'],
+#                 pack_dict['ip_dst'], pack_dict['next_header'], pack_dict['hop_limit'],
+#                 pack_dict['traffic_class'], pack_dict['flowlabel'], pack_dict['version']
+#               )
+
+
+    def filter(self, sniff_filter):
+        pass

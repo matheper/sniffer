@@ -37,29 +37,33 @@ class App(object):
         #Campo Tree
         self.lstConsulta = self.xml.get_widget("lstConsulta")
         self.lstConsulta.set_headers_visible(True)
-
         self.sniffer = Sniffer()
-    
-    def start(self, widget, data):
-        """ Start a capitura das pacotes
-        """
+        self.format_grid()
 
+        import ipdb;ipdb.set_trace()
+
+    def start(self, widget, data):
+        """ Start a captura dos pacotes
+        """
+        self.format_grid()
+
+    def format_grid(self):
         #Formata controle lista
         self.ClearColunas()
-        self.listbox_types = [str,str,str,str,str,str,str,str]
+        self.listbox_types = [str,str,str,str,str,str,str,str,str,str,str]
         self.listbox_data = self.sniffer.capture_list
         self.lstConsulta.set_model(self.get_dados(self.listbox_data, self.listbox_types))
 
         #Cria colunas da lista
-        self.listbox_header = [('IP Origem',0),('IP Destino',1),('ID Próximo Cabeçalho',2),
-                               ('Próximo Cabeçalho',3),('Hop Limit',4),('ID Classe de Tráfego',5),
-                               ('Controle Classe',6), ('Descricao Classe',7)
+        self.listbox_header = [ ('IP Origem',0), ('Tipo',1), ('IP Destino',2), ('Tipo',3),
+                                ('Próximo Cabeçalho',4), ('Hop Limit',5),
+                                ('Classe de Tráfego',6), ('',7), ('',8),
+                                ('Flowlabel',9), ('Versão',10)
                               ]
         self.CriarColuna(self.listbox_header)
-        self.sniffer.configure_device()
 
     def stop(self, widget, data):
-        """ Stop a capitura das pacotes
+        """ Stop a captura dos pacotes
         """
         self.ClearColunas()
 
@@ -67,7 +71,7 @@ class App(object):
         """ Filtra os pacotes
         """
         print 'filter ok'
-        self.sniffer.get_next_packet()
+        self.sniffer.get_packet('ip6')
         self.listbox_data = self.sniffer.capture_list
         self.listbox_update()
 
@@ -87,7 +91,7 @@ class App(object):
             column = gtk.TreeViewColumn(titulo, renderer, text = id)
             column.set_resizable(False)
             self.lstConsulta.append_column(column)
-    
+
     def ClearColunas(self):
         """ Clear coluna da lista
         """
@@ -101,6 +105,11 @@ class App(object):
         for dado in dados:
             retorno.append(dado)
         return retorno
+
+    def read_file(self):
+        self.sniffer.read_file('/home/matheus/Downloads/captura/captura_ipv6_filter')
+        self.listbox_data = self.sniffer.capture_list
+        self.listbox_update()
 
     def listbox_update(self):
         self.lstConsulta.set_model(self.get_dados(self.listbox_data, self.listbox_types))

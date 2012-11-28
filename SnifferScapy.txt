@@ -1,0 +1,54 @@
+from scapy import all
+
+rcap = all.rdpcap('ipv6.pcap')
+cap = all.sniff(count = 10)
+cap = all.sniff(filter = 'ip6', count = 10)
+pack = cap[0]
+pkts = sniff(offline="temp.cap")
+all.hexdump( pack)
+pack.show()
+
+###[ Ethernet ]###
+  dst       = 5c:d9:98:1c:26:74
+  src       = c0:18:85:e7:39:9b
+  type      = 0x800
+###[ IP ]###
+     version   = 4L
+     ihl       = 5L
+     tos       = 0x0
+     len       = 52
+     id        = 15078
+     flags     = DF
+     frag      = 0L
+     ttl       = 64
+     proto     = tcp
+     chksum    = 0x1ae4
+     src       = 192.168.0.100
+     dst       = 204.141.87.96
+     \options   \
+###[ TCP ]###
+        sport     = 50688
+        dport     = http
+        seq       = 4204689153
+        ack       = 781494330
+        dataofs   = 8L
+        reserved  = 0L
+        flags     = A
+        window    = 205
+        chksum    = 0xe520
+        urgptr    = 0
+        options   = [('NOP', None), ('NOP', None), ('Timestamp', (1310417, 2078915824))]
+
+
+
+ip = pack['IP']
+ip.getfieldval('src')
+ip.getfieldval('dst')
+
+cap = all.rdpcap('/home/matheus/Downloads/captura/captura_ipv6_filter')
+for i,pack in enumerate(cap): print i, pack.nh
+
+next_header_list = []
+while hasattr(current,'nh'):
+    next_header_list.append(current.nh)
+    current = current.payload
