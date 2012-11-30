@@ -36,7 +36,7 @@ class App(object):
 
         #Campo Tree
         self.lstConsulta = self.xml.get_widget("lstConsulta")
-        self.filter
+        self.entryFilter = self.xml.get_widget("entry1")
         self.lstConsulta.set_headers_visible(True)
         self.sniffer = Sniffer()
         self.format_grid()
@@ -70,11 +70,13 @@ class App(object):
     def filter(self, widget, data):
         """ Filtra os pacotes
         """
-        print 'filter ok'
-        self.sniffer.get_packet('ip6')
-        self.listbox_data = self.sniffer.capture_list
+        import ipdb;ipdb.set_trace()
+        self.listbox_data = self.sniffer.capture_filter(self.entryFilter.get_text())
         self.listbox_update()
 
+    def clear(self, widget, data):
+        self.listbox_data = self.sniffer.capture_list
+        self.listbox_update()
 
     def load(self, widget, data):
         """Load file capture.cap."""

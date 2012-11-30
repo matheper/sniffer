@@ -3,6 +3,9 @@ from scapy import all
 import netaddr
 
 
+INDEX = 0
+VALUE = ''
+
 class Sniffer():
     """Sniffer class."""
 
@@ -112,42 +115,38 @@ class Sniffer():
         return flow_packets
 
 
-    def ip_filter(self, side, oper, ip):
-        """Side can be 'src' or 'dst'."""
+    def list_filter(self, side, oper, value):
+        """Side can be 'src', 'dst' or 'flowlabel'."""
+        VALUE = value
         if side == 'src':
-            index = 0
+            INDEX = 0
         elif side == 'dst':
-            index = 2
-        else: return
+            INDEX = 2
+        elif side == 'flowlabel':
+            INDEX = 9
+            self.filtered_list[:] = filter(lambda x: x[INDEX] == VALUE, self.filtered_list)
+            return True
+        else:
+            return False
         if oper == '<':
-            self.filtered_list[:] = filter(lambda x: netaddr.IPAddress(x[index]) < netaddr.IPAddress(ip), self.filtered_list)
+            self.filtered_list[:] = filter(lambda x: netaddr.IPAddress(x[INDEX]) < netaddr.IPAddress(VALUE), self.filtered_list)
         elif oper == '<=':
-            self.filtered_list[:] = filter(lambda x: netaddr.IPAddress(x[index]) <= netaddr.IPAddress(ip), self.filtered_list)
+            self.filtered_list[:] = filter(lambda x: netaddr.IPAddress(x[INDEX]) <= netaddr.IPAddress(VALUE), self.filtered_list)
         elif oper == '>':
-            self.filtered_list[:] = filter(lambda x: netaddr.IPAddress(x[index]) > netaddr.IPAddress(ip), self.filtered_list)
+            self.filtered_list[:] = filter(lambda x: netaddr.IPAddress(x[INDEX]) > netaddr.IPAddress(VALUE), self.filtered_list)
         elif oper == '>=':
-            self.filtered_list[:] = filter(lambda x: netaddr.IPAddress(x[index]) >= netaddr.IPAddress(ip), self.filtered_list)
+            self.filtered_list[:] = filter(lambda x: netaddr.IPAddress(x[INDEX]) >= netaddr.IPAddress(VALUE), self.filtered_list)
         elif oper == '==':
-            self.filtered_list[:] = filter(lambda x: netaddr.IPAddress(x[index]) == netaddr.IPAddress(ip), self.filtered_list)
+            self.filtered_list[:] = filter(lambda x: netaddr.IPAddress(x[INDEX]) == netaddr.IPAddress(VALUE), self.filtered_list)
         elif oper == '!=':
-            self.filtered_list[:] = filter(lambda x: netaddr.IPAddress(x[index]) != netaddr.IPAddress(ip), self.filtered_list)
+            self.filtered_list[:] = filter(lambda x: netaddr.IPAddress(x[INDEX]) != netaddr.IPAddress(VALUE), self.filtered_list)
+        return True
 
-    def parse_filter(expression):
-        expression = expression.split(';')
+    def capture_filter(self, expression):
+        self.filtered_list = self.capture_list[:]
+        expression = expression.split('; ')
         for operation in expression:
             opers = operation.split(' ')
             if len(opers) == 3:
-                ip_filter(opers[0], opers[1], opers[2])
-                
-
-
-
-#    def get_capture_list(self):
-#        return ( pack_dict['mac_src'], pack_dict['mac_dst'], pack_dict['ip_src'],
-#                 pack_dict['ip_dst'], pack_dict['next_header'], pack_dict['hop_limit'],
-#                 pack_dict['traffic_class'], pack_dict['flowlabel'], pack_dict['version']
-#               )
-
-
-#    def filter(self, sniff_filter):
-#        pass
+                self.list_filter(opers[0], opers[1], opers[2])
+        return self.filtered_list
