@@ -36,11 +36,11 @@ class App(object):
 
         #Campo Tree
         self.lstConsulta = self.xml.get_widget("lstConsulta")
+        self.filter
         self.lstConsulta.set_headers_visible(True)
         self.sniffer = Sniffer()
         self.format_grid()
 
-        import ipdb;ipdb.set_trace()
 
     def start(self, widget, data):
         """ Start a captura dos pacotes
@@ -74,6 +74,11 @@ class App(object):
         self.sniffer.get_packet('ip6')
         self.listbox_data = self.sniffer.capture_list
         self.listbox_update()
+
+
+    def load(self, widget, data):
+        """Load file capture.cap."""
+        self.read_file()
 
     def quitMainWindow(self, widget, data):
         """

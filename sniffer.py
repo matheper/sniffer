@@ -8,6 +8,7 @@ class Sniffer():
 
     def __init__(self):
         self.capture_list = []
+        self.filtered_list = []
         self.capture_dict = []
         
         self.extension_header = {
@@ -111,12 +112,34 @@ class Sniffer():
         return flow_packets
 
 
-    def parse_filter(src = '', operador = ''):
-        filtered_list = []
-        if src and dst:
-            ip_src = netaddr.IPAddress(src)
-            ip_dst = netaddr.IPAddress(dst)
-            filtered_list[:] = filter(lambda x: x[])
+    def ip_filter(self, side, oper, ip):
+        """Side can be 'src' or 'dst'."""
+        if side == 'src':
+            index = 0
+        elif side == 'dst':
+            index = 2
+        else: return
+        if oper == '<':
+            self.filtered_list[:] = filter(lambda x: netaddr.IPAddress(x[index]) < netaddr.IPAddress(ip), self.filtered_list)
+        elif oper == '<=':
+            self.filtered_list[:] = filter(lambda x: netaddr.IPAddress(x[index]) <= netaddr.IPAddress(ip), self.filtered_list)
+        elif oper == '>':
+            self.filtered_list[:] = filter(lambda x: netaddr.IPAddress(x[index]) > netaddr.IPAddress(ip), self.filtered_list)
+        elif oper == '>=':
+            self.filtered_list[:] = filter(lambda x: netaddr.IPAddress(x[index]) >= netaddr.IPAddress(ip), self.filtered_list)
+        elif oper == '==':
+            self.filtered_list[:] = filter(lambda x: netaddr.IPAddress(x[index]) == netaddr.IPAddress(ip), self.filtered_list)
+        elif oper == '!=':
+            self.filtered_list[:] = filter(lambda x: netaddr.IPAddress(x[index]) != netaddr.IPAddress(ip), self.filtered_list)
+
+    def parse_filter(expression):
+        expression = expression.split(';')
+        for operation in expression:
+            opers = operation.split(' ')
+            if len(opers) == 3:
+                ip_filter(opers[0], opers[1], opers[2])
+                
+
 
 
 #    def get_capture_list(self):
@@ -126,5 +149,5 @@ class Sniffer():
 #               )
 
 
-    def filter(self, sniff_filter):
-        pass
+#    def filter(self, sniff_filter):
+#        pass
