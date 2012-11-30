@@ -78,7 +78,9 @@ class App(object):
 
     def load(self, widget, data):
         """Load file capture.cap."""
-        self.read_file()
+        self.sniffer.read_file('capture.cap')
+        self.listbox_data = self.sniffer.capture_list
+        self.listbox_update()
 
     def quitMainWindow(self, widget, data):
         """
