@@ -10,10 +10,13 @@ class Sniffer():
     """Sniffer class."""
 
     def __init__(self):
+        """ Defini dicionarios para proximo cabecalho e classe de trafego."""
         self.capture_list = []
         self.filtered_list = []
         self.capture_dict = []
-        
+        self.flowlabel_dict = {}
+        self.mean_next_header = 0
+
         self.extension_header = {
             0:"Hop-By-Hop Options Extension Header",
             1:"ICMPv4",
@@ -64,6 +67,8 @@ class Sniffer():
 
 
     def analyze(self, packet):
+        """ Faz a analise do pacote e insere as informacoes
+            no dict capture_dict e na lista capture_list."""
         pack_dict = {}
         pack_dict['mac_src'] = packet.src
         pack_dict['mac_dst'] = packet.dst
@@ -98,33 +103,30 @@ class Sniffer():
 
 
     def get_packet(self, sniff_filter = 'ip6'):
+        """ Captura e analisa 1 pacote."""
         capture = all.sniff(filter = sniff_filter, count = 1)
         packet = capture[0]
         self.analyze(packet)
 
 
     def read_file(self, filename):
+        """ Le arquivo compativel com wireshark (.cap) e faz analise dos pacote"""
         capture = all.rdpcap(filename)
         for packet in capture:
             self.analyze(packet)
 
 
-    def get_flow_packets(self, flowlabel):
-        flow_packets = []
-        flow_packets[:] = filter(lambda x: x[9] == flowlabel, self.capture_list)
-        return flow_packets
-
-
     def list_filter(self, side, oper, value):
-        """Side can be 'src', 'dst' or 'flowlabel'."""
+        """ Side pode ser 'origem', 'destino' ou 'flowlabel'.
+            Prepara filtered_list utilizada na funcao capture_filter."""
         VALUE = value
-        if side == 'src':
+        if side.lower() == 'origem':
             INDEX = 0
-        elif side == 'dst':
+        elif side.lower() == 'destino':
             INDEX = 2
-        elif side == 'flowlabel':
+        elif side.lower() == 'flowlabel':
             INDEX = 9
-            self.filtered_list[:] = filter(lambda x: x[INDEX] == VALUE, self.filtered_list)
+            self.filtered_list[:] = filter(lambda x: x[INDEX] == int(VALUE), self.filtered_list)
             return True
         else:
             return False
@@ -143,6 +145,9 @@ class Sniffer():
         return True
 
     def capture_filter(self, expression):
+        """ Recebe uma lista de expressoes separadas por virgula,
+            Faz split e executa filtro com 'E' logico.
+            Returna lista filtrada."""
         self.filtered_list = self.capture_list[:]
         expression = expression.split('; ')
         for operation in expression:
@@ -150,3 +155,24 @@ class Sniffer():
             if len(opers) == 3:
                 self.list_filter(opers[0], opers[1], opers[2])
         return self.filtered_list
+
+    def set_flowlabel_list(self):
+        """ Cria dicionario com pacotes do mesmo fluxo para
+            o mesmo ip destino e ip origem."""
+        for packet in self.capture_dict:
+            src = packet['ip_src']
+            dst = packet['ip_dst']
+            flowlabel = packet['flowlabel']
+            self.flowlabel_dict[(src, dst, flowlabel)] = []
+        for packet in self.capture_dict:
+            src = packet['ip_src']
+            dst = packet['ip_dst']
+            flowlabel = packet['flowlabel']
+            self.flowlabel_dict[(src, dst, flowlabel)].append(packet)
+
+    def set_mean_next_header(self):
+        """ Cria media do numero de pacotes de proximo cabecalho."""
+        total = 0.0
+        for packet in self.capture_dict:
+            total += len(packet['next_header'])
+        self.mean_next_header = total / len(self.capture_dict)

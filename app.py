@@ -70,9 +70,9 @@ class App(object):
     def filter(self, widget, data):
         """ Filtra os pacotes
         """
-        import ipdb;ipdb.set_trace()
         self.listbox_data = self.sniffer.capture_filter(self.entryFilter.get_text())
         self.listbox_update()
+        import ipdb;ipdb.set_trace()
 
     def clear(self, widget, data):
         self.listbox_data = self.sniffer.capture_list
