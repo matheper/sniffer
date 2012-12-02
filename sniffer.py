@@ -16,6 +16,7 @@ class Sniffer():
         self.capture_dict = []
         self.flowlabel_dict = {}
         self.mean_next_header = 0
+        self.icmpv6_number = 0
 
         self.extension_header = {
             0:"Hop-By-Hop Options Extension Header",
@@ -176,3 +177,12 @@ class Sniffer():
         for packet in self.capture_dict:
             total += len(packet['next_header'])
         self.mean_next_header = total / len(self.capture_dict)
+
+
+    def counts_icmpv6(self):
+        """Contabiliza numero de pacotes ICMPv6 da captura."""
+        import ipdb;ipdb.set_trace()
+        self.icmpv6_number = 0
+        for packet in self.capture_dict:
+            if (58,'ICMPv6') in packet['next_header']:
+                self.icmpv6_number += 1
