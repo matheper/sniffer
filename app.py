@@ -21,6 +21,7 @@ except:
     print "Erro ao importar sniffer."
     sys.exit(1)
 
+
 class App(object):
     """Sniffer Interface
     """
@@ -46,9 +47,10 @@ class App(object):
         if not self.capturing:
             self.format_grid()
             self.capturing = True
-#            self.capture()
+            gtk.gdk.threads_init()
             cap = threading.Thread(target=self.capture)
             cap.start()
+            
 
     def format_grid(self):
         #Formata controle lista
@@ -143,12 +145,8 @@ class App(object):
         return retorno
 
     def capture(self):
-#        import ipdb;ipdb.set_trace()
-        print 10
         while self.capturing:
-#            time.sleep(1)
-            print 10
-            self.sniffer.get_packet('')
+            self.sniffer.get_packet()
             self.listbox_data = self.sniffer.capture_list
             self.listbox_update()
 
