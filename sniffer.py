@@ -223,7 +223,11 @@ class Sniffer():
         cairoplot.donut_plot( "trafficClass.svg", data, 400, 200, gradient = True, shadow = True, inner_radius = 0.3 )
         data = self.number_of_next_header
         x_labels = ["Quantidade de próximos cabeçalhos"]
-        cairoplot.dot_line_plot("lenNextHeader.svg", data, 400, 200, axis = False, grid = True, x_labels = [' ',' '])
+        y_labels = [str(i) for i in range(max(data)+1)]
+#        cairoplot.dot_line_plot("lenNextHeader.svg", data, 400, 200, axis = False, grid = True, x_labels = [' ',' '])
+        cairoplot.vertical_bar_plot ( 'lenNextHeader.svg', data, 400, 200, grid = True, rounded_corners = True,
+                                      x_labels = x_labels, y_labels = y_labels)
+
 
         self.counts_udp_icmpv6()
         size = len(self.filtered_list)
