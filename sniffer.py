@@ -2,7 +2,6 @@
 from scapy import all
 import netaddr
 
-
 INDEX = 0
 VALUE = ''
 
@@ -17,6 +16,10 @@ class Sniffer():
         self.flowlabel_dict = {}
         self.mean_next_header = 0
         self.icmpv6_number = 0
+        self.next_header_dict = {}
+        self.address_type_dict = {}
+        self.traffic_class_dict = {}
+        self.number_of_next_header = []
 
         self.extension_header = {
             0:"Hop-By-Hop Options Extension Header",
@@ -50,22 +53,19 @@ class Sniffer():
             7 : "Tráfego de controle",
         }
 
-
     def next_header_type(self, nxt):
         """Retuns label for next header code."""
         if self.extension_header.has_key(nxt):
             return (nxt,self.extension_header[nxt])
         return (nxt,'')
 
-
     def traffic_class_type(self, t_class):
         """Returns label for traffic class code."""
         if t_class >= 0 and t_class <= 7:
             return (t_class, "Tráfego controlado por congestionamento", self.traffic_dict[t_class])
         elif t_class <= 15:
-            return (t_class, "Tráfego não controlado por congestionamento", "")
+            return (t_class, "Tráfego não controlado por congestionamento", "Tráfego não controlado por congestionamento")
         return False
-
 
     def analyze(self, packet):
         """ Faz a analise do pacote e insere as informacoes
@@ -102,20 +102,17 @@ class Sniffer():
 
         self.capture_list.append(pack_tuple)
 
-
     def get_packet(self, sniff_filter = 'ip6'):
         """ Captura e analisa 1 pacote."""
         capture = all.sniff(filter = sniff_filter, count = 1)
         packet = capture[0]
         self.analyze(packet)
 
-
     def read_file(self, filename):
         """ Le arquivo compativel com wireshark (.cap) e faz analise dos pacote"""
         capture = all.rdpcap(filename)
         for packet in capture:
             self.analyze(packet)
-
 
     def list_filter(self, side, oper, value):
         """ Side pode ser 'origem', 'destino' ou 'flowlabel'.
@@ -178,11 +175,27 @@ class Sniffer():
             total += len(packet['next_header'])
         self.mean_next_header = total / len(self.capture_dict)
 
-
     def counts_icmpv6(self):
         """Contabiliza numero de pacotes ICMPv6 da captura."""
-        import ipdb;ipdb.set_trace()
         self.icmpv6_number = 0
         for packet in self.capture_dict:
             if (58,'ICMPv6') in packet['next_header']:
                 self.icmpv6_number += 1
+
+    def set_dicts(self):
+        """ Cria dicionario com tipo de pacote e numero de vezes
+            que aparece na captura."""
+        for packet in self.capture_dict:
+            for header in packet['next_header']:
+                self.next_header_dict[header[1]] = 0
+            self.address_type_dict[packet['ip_src_type']] = 0
+            self.address_type_dict[packet['ip_dst_type']] = 0
+            self.traffic_class_dict[packet['traffic_class'][2]] = 0
+        self.number_of_next_header = []
+        for packet in self.capture_dict:
+            for header in packet['next_header']:
+                self.next_header_dict[header[1]] += 1
+            self.address_type_dict[packet['ip_src_type']] += 1
+            self.address_type_dict[packet['ip_dst_type']] += 1
+            self.traffic_class_dict[packet['traffic_class'][2]] += 1
+            self.number_of_next_header.append(len(packet['next_header']))

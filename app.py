@@ -9,18 +9,21 @@ try:
 except:
     print "Erro require pygtk >= 2.0."
     sys.exit(1)
-
 try:
     import gtk
     import gtk.glade
 except:
     print "Erro ao importar o GTK."
     sys.exit(1)
-
 try:
     from sniffer import Sniffer
 except:
     print "Erro ao importar sniffer."
+    sys.exit(1)
+try:
+    import cairoplot, cairo
+except:
+    print "Erro ao importar cairoplot."
     sys.exit(1)
 
 class App(object):
@@ -29,9 +32,9 @@ class App(object):
 
     def __init__(self):
         #carrega o arquivo Glade
-        self.arquivoglade = "app.glade"
+        self.appglade = "app.glade"
         #carrega xml
-        self.xml = gtk.glade.XML(self.arquivoglade)
+        self.xml = gtk.glade.XML(self.appglade)
         self.xml.signal_autoconnect(self)
 
         #Campo Tree
@@ -40,7 +43,6 @@ class App(object):
         self.lstConsulta.set_headers_visible(True)
         self.sniffer = Sniffer()
         self.format_grid()
-
 
     def start(self, widget, data):
         """ Start a captura dos pacotes
@@ -72,7 +74,6 @@ class App(object):
         """
         self.listbox_data = self.sniffer.capture_filter(self.entryFilter.get_text())
         self.listbox_update()
-        import ipdb;ipdb.set_trace()
 
     def clear(self, widget, data):
         self.listbox_data = self.sniffer.capture_list
@@ -83,6 +84,9 @@ class App(object):
         self.sniffer.read_file('capture.cap')
         self.listbox_data = self.sniffer.capture_list
         self.listbox_update()
+
+    def statistics(self, widget, data):
+        self.open_graphs()
 
     def quitMainWindow(self, widget, data):
         """
@@ -122,6 +126,37 @@ class App(object):
 
     def listbox_update(self):
         self.lstConsulta.set_model(self.get_dados(self.listbox_data, self.listbox_types))
+
+    def create_graphs(self):
+        self.sniffer.set_dicts()
+        background = cairo.LinearGradient(300, 0, 300, 400)
+        background.add_color_stop_rgb(0,0.4,0.4,0.4)
+        background.add_color_stop_rgb(1.0,0.1,0.1,0.1)
+        data = self.sniffer.next_header_dict
+        cairoplot.donut_plot( "nextHeader.svg", data, 400, 200, gradient = True, shadow = True, inner_radius = 0.3 )
+        data = self.sniffer.address_type_dict
+        cairoplot.donut_plot( "addressType.svg", data, 400, 200, gradient = True, shadow = True, inner_radius = 0.3 )
+        data = self.sniffer.traffic_class_dict
+        cairoplot.donut_plot( "trafficClass.svg", data, 400, 200, gradient = True, shadow = True, inner_radius = 0.3 )
+
+
+        data = self.sniffer.number_of_next_header
+        x_labels = ["Quantidade de próximos cabeçalhos"]
+        cairoplot.dot_line_plot("lenNextHeader.svg", data, 400, 200, axis = False, grid = True, x_labels = [' ',' '])
+
+
+    def open_graphs(self):
+        self.create_graphs()
+        self.graphsglade = "graphs.glade"
+        self.graphsxml = gtk.glade.XML(self.graphsglade)
+        address = self.graphsxml.get_widget("addressType")
+        address.set_from_file('addressType.svg')
+        traffic = self.graphsxml.get_widget("trafficClass")
+        traffic.set_from_file('trafficClass.svg')
+        icmpv6 = self.graphsxml.get_widget("lenNextHeader")
+        icmpv6.set_from_file('lenNextHeader.svg')
+        nextHeader = self.graphsxml.get_widget("nextHeader")
+        nextHeader.set_from_file('nextHeader.svg')
 
 
 if __name__ == "__main__":
