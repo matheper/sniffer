@@ -96,6 +96,21 @@
                 <property name="position">4</property>
               </packing>
             </child>
+            <child>
+              <widget class="GtkButton" id="btnLimparCaptura">
+                <property name="label" translatable="yes">Limpar Captura</property>
+                <property name="visible">True</property>
+                <property name="can_focus">True</property>
+                <property name="receives_default">True</property>
+                <property name="use_action_appearance">False</property>
+                <signal name="button_press_event" handler="captureClear" swapped="no"/>
+              </widget>
+              <packing>
+                <property name="expand">False</property>
+                <property name="fill">False</property>
+                <property name="position">5</property>
+              </packing>
+            </child>
           </widget>
           <packing>
             <property name="expand">False</property>
@@ -153,7 +168,7 @@
             </child>
             <child>
               <widget class="GtkButton" id="btnLimpar">
-                <property name="label" translatable="yes">Limpar</property>
+                <property name="label" translatable="yes">Limpar Filtro</property>
                 <property name="visible">True</property>
                 <property name="can_focus">True</property>
                 <property name="receives_default">True</property>

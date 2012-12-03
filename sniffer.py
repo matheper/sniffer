@@ -257,3 +257,6 @@ class Sniffer():
             self.address_type_dict[packet[3]] += 1
             self.traffic_class_dict[packet[8]] += 1
             self.number_of_next_header.append(len(packet[4]))
+
+    def clearAll(self):
+        self.__init__()

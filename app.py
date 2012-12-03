@@ -47,6 +47,7 @@ class App(object):
         self.btnCarregar = self.xml.get_widget("btnCarregar")
         self.btnEstatisticas = self.xml.get_widget("btnEstatisticas")
         self.btnGraficos = self.xml.get_widget("btnGraficos")
+        self.btnLimparCaptura = self.xml.get_widget("btnLimparCaptura")
         self.btnFiltrar = self.xml.get_widget("btnFiltrar")
         self.btnLimpar = self.xml.get_widget("btnLimpar")
         self.set_buttons()
@@ -122,6 +123,11 @@ class App(object):
     def graphcs(self, widget, data):
         self.open_graphs()
 
+    def captureClear(self, widget, data):
+        self.sniffer.clearAll()
+        self.listbox_data = self.sniffer.capture_list
+        self.listbox_update()
+
     def quitMainWindow(self, widget, data):
         """
             Sai do loop principal de eventos, finalizando o programa
@@ -187,6 +193,7 @@ class App(object):
             self.btnCarregar.set_state(gtk.STATE_INSENSITIVE)
             self.btnEstatisticas.set_state(gtk.STATE_INSENSITIVE)
             self.btnGraficos.set_state(gtk.STATE_INSENSITIVE)
+            self.btnLimparCaptura.set_state(gtk.STATE_INSENSITIVE)
             self.btnFiltrar.set_state(gtk.STATE_INSENSITIVE)
             self.btnLimpar.set_state(gtk.STATE_INSENSITIVE)
         else:
@@ -195,6 +202,7 @@ class App(object):
             self.btnCarregar.set_sensitive(True)
             self.btnEstatisticas.set_sensitive(True)
             self.btnGraficos.set_sensitive(True)
+            self.btnLimparCaptura.set_sensitive(True)
             self.btnFiltrar.set_sensitive(True)
             self.btnLimpar.set_sensitive(True)
 
