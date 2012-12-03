@@ -1,6 +1,6 @@
 # -*- coding:utf-8 -*-
 #!/usr/bin/python
-import sys
+import sys, time
 import threading
 
 try:
@@ -43,11 +43,17 @@ class App(object):
         self.lstConsulta.set_headers_visible(True)
         self.sniffer = Sniffer()
         self.format_grid()
+        self.capturing = False
 
     def start(self, widget, data):
         """ Start a captura dos pacotes
         """
-        self.format_grid()
+        if not self.capturing:
+            self.format_grid()
+            self.capturing = True
+#            self.capture()
+            cap = threading.Thread(target=self.capture)
+            cap.start()
 
     def format_grid(self):
         #Formata controle lista
@@ -67,7 +73,8 @@ class App(object):
     def stop(self, widget, data):
         """ Stop a captura dos pacotes
         """
-        self.ClearColunas()
+        if self.capturing:
+            self.capturing = False
 
     def filter(self, widget, data):
         """ Filtra os pacotes
@@ -111,6 +118,9 @@ class App(object):
         for coluna in self.lstConsulta.get_columns():
             self.lstConsulta.remove_column(coluna)
 
+    def listbox_update(self):
+        self.lstConsulta.set_model(self.get_dados(self.listbox_data, self.listbox_types))
+
     def get_dados(self,dados,types):
         """ Add as linhas nas respectivas colunas
         """
@@ -119,13 +129,20 @@ class App(object):
             retorno.append(dado)
         return retorno
 
+    def capture(self):
+#        import ipdb;ipdb.set_trace()
+        print 10
+        while self.capturing:
+#            time.sleep(1)
+            print 10
+            self.sniffer.get_packet('')
+            self.listbox_data = self.sniffer.capture_list
+            self.listbox_update()
+
     def read_file(self):
         self.sniffer.read_file('/home/matheus/Downloads/captura/captura_ipv6_filter')
         self.listbox_data = self.sniffer.capture_list
         self.listbox_update()
-
-    def listbox_update(self):
-        self.lstConsulta.set_model(self.get_dados(self.listbox_data, self.listbox_types))
 
     def create_graphs(self):
         self.sniffer.set_dicts()
@@ -138,14 +155,15 @@ class App(object):
         cairoplot.donut_plot( "addressType.svg", data, 400, 200, gradient = True, shadow = True, inner_radius = 0.3 )
         data = self.sniffer.traffic_class_dict
         cairoplot.donut_plot( "trafficClass.svg", data, 400, 200, gradient = True, shadow = True, inner_radius = 0.3 )
-
-
         data = self.sniffer.number_of_next_header
         x_labels = ["Quantidade de próximos cabeçalhos"]
         cairoplot.dot_line_plot("lenNextHeader.svg", data, 400, 200, axis = False, grid = True, x_labels = [' ',' '])
 
-
     def open_graphs(self):
+        self.sniffer.next_header_dict = {}
+        self.sniffer.address_type_dict = {}
+        self.sniffer.traffic_class_dict = {}
+        self.sniffer.number_of_next_header = []
         self.create_graphs()
         self.graphsglade = "graphs.glade"
         self.graphsxml = gtk.glade.XML(self.graphsglade)

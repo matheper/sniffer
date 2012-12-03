@@ -101,6 +101,7 @@ class Sniffer():
                       )
 
         self.capture_list.append(pack_tuple)
+        self.filtered_list.append(pack_tuple)
 
     def get_packet(self, sniff_filter = 'ip6'):
         """ Captura e analisa 1 pacote."""
@@ -185,17 +186,23 @@ class Sniffer():
     def set_dicts(self):
         """ Cria dicionario com tipo de pacote e numero de vezes
             que aparece na captura."""
-        for packet in self.capture_dict:
-            for header in packet['next_header']:
-                self.next_header_dict[header[1]] = 0
-            self.address_type_dict[packet['ip_src_type']] = 0
-            self.address_type_dict[packet['ip_dst_type']] = 0
-            self.traffic_class_dict[packet['traffic_class'][2]] = 0
+
+        self.next_header_dict = {}
+        self.address_type_dict = {}
+        self.traffic_class_dict = {}
         self.number_of_next_header = []
-        for packet in self.capture_dict:
-            for header in packet['next_header']:
+
+        for packet in self.filtered_list:
+            for header in packet[4]: #next_header
+                self.next_header_dict[header[1]] = 0
+            self.address_type_dict[packet[1]] = 0 #ip_src_type
+            self.address_type_dict[packet[3]] = 0 #ip_dst_type
+            self.traffic_class_dict[packet[8]] = 0 #traffic_class
+        self.number_of_next_header = []
+        for packet in self.filtered_list:
+            for header in packet[4]:
                 self.next_header_dict[header[1]] += 1
-            self.address_type_dict[packet['ip_src_type']] += 1
-            self.address_type_dict[packet['ip_dst_type']] += 1
-            self.traffic_class_dict[packet['traffic_class'][2]] += 1
-            self.number_of_next_header.append(len(packet['next_header']))
+            self.address_type_dict[packet[1]] += 1
+            self.address_type_dict[packet[3]] += 1
+            self.traffic_class_dict[packet[8]] += 1
+            self.number_of_next_header.append(len(packet[4]))
