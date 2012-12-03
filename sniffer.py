@@ -14,7 +14,7 @@ class Sniffer():
     """Sniffer class."""
 
     def __init__(self):
-        """ Defini dicionarios para proximo cabecalho e classe de trafego."""
+        """ Define dicionarios para proximo cabecalho e classe de trafego."""
         self.capture_list = []
         self.filtered_list = []
         self.capture_dict = []
