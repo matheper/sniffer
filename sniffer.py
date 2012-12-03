@@ -21,6 +21,7 @@ class Sniffer():
         self.flowlabel_dict = {}
         self.mean_next_header = 0
         self.icmpv6_number = 0
+        self.udp_number = 0
         self.next_header_dict = {}
         self.address_type_dict = {}
         self.traffic_class_dict = {}
@@ -75,38 +76,41 @@ class Sniffer():
     def analyze(self, packet):
         """ Faz a analise do pacote e insere as informacoes
             no dict capture_dict e na lista capture_list."""
-        pack_dict = {}
-        pack_dict['mac_src'] = packet.src
-        pack_dict['mac_dst'] = packet.dst
-        ip = packet.payload
-        pack_dict['ip_src'] = ip.src
-        pack_dict['ip_src_type'] = netaddr.IPAddress(ip.src).info['IPv6'][0]['allocation']
-        pack_dict['ip_dst'] = ip.dst
-        pack_dict['ip_dst_type'] = netaddr.IPAddress(ip.dst).info['IPv6'][0]['allocation']
-        pack_dict['ip_dst'] = ip.dst
-        pack_dict['hop_limit'] = ip.hlim
-        pack_dict['traffic_class'] = self.traffic_class_type(ip.tc)
-        pack_dict['flowlabel'] = ip.fl
-        pack_dict['version'] = ip.version
+        try:
+            pack_dict = {}
+            pack_dict['mac_src'] = packet.src
+            pack_dict['mac_dst'] = packet.dst
+            ip = packet.payload
+            pack_dict['ip_src'] = ip.src
+            pack_dict['ip_src_type'] = netaddr.IPAddress(ip.src).info['IPv6'][0]['allocation']
+            pack_dict['ip_dst'] = ip.dst
+            pack_dict['ip_dst_type'] = netaddr.IPAddress(ip.dst).info['IPv6'][0]['allocation']
+            pack_dict['ip_dst'] = ip.dst
+            pack_dict['hop_limit'] = ip.hlim
+            pack_dict['traffic_class'] = self.traffic_class_type(ip.tc)
+            pack_dict['flowlabel'] = ip.fl
+            pack_dict['version'] = ip.version
 
-        current = ip
-        next_header_list = []
-        while hasattr(current, 'nh'):
-            next_header_list.append(self.next_header_type(current.nh))
-            current = current.payload
-        pack_dict['next_header'] = next_header_list
+            current = ip
+            next_header_list = []
+            while hasattr(current, 'nh'):
+                next_header_list.append(self.next_header_type(current.nh))
+                current = current.payload
+            pack_dict['next_header'] = next_header_list
 
-        self.capture_dict.append(pack_dict)
+            self.capture_dict.append(pack_dict)
 
-        pack_tuple  = ( pack_dict['ip_src'], pack_dict['ip_src_type'], pack_dict['ip_dst'],
-                        pack_dict['ip_dst_type'], pack_dict['next_header'],
-                        pack_dict['hop_limit'], pack_dict['traffic_class'][0],
-                        pack_dict['traffic_class'][1], pack_dict['traffic_class'][2],
-                        pack_dict['flowlabel'], pack_dict['version']
-                      )
+            pack_tuple  = ( pack_dict['ip_src'], pack_dict['ip_src_type'], pack_dict['ip_dst'],
+                            pack_dict['ip_dst_type'], pack_dict['next_header'],
+                            pack_dict['hop_limit'], pack_dict['traffic_class'][0],
+                            pack_dict['traffic_class'][1], pack_dict['traffic_class'][2],
+                            pack_dict['flowlabel'], pack_dict['version']
+                        )
 
-        self.capture_list.append(pack_tuple)
-        self.filtered_list.append(pack_tuple)
+            self.capture_list.append(pack_tuple)
+            self.filtered_list.append(pack_tuple)
+        except Exception,e:
+            print e
 
     def get_packet(self, sniff_filter = 'ip6'):
         """ Captura e analisa 1 pacote."""
@@ -193,12 +197,15 @@ class Sniffer():
             stats.append((flow[0], flow[1], str(flow[2]), str(len(self.flowlabel_dict[flow]))))
         return stats
 
-    def counts_icmpv6(self):
-        """Contabiliza numero de pacotes ICMPv6 da captura."""
+    def counts_udp_icmpv6(self):
+        """Contabiliza numero de pacotes ICMPv6 e UDP da captura."""
         self.icmpv6_number = 0
-        for packet in self.capture_dict:
-            if (58,'ICMPv6') in packet['next_header']:
+        self.udp_number = 0
+        for packet in self.filtered_list:
+            if (58,'ICMPv6') in packet[4]:
                 self.icmpv6_number += 1
+            if (17,'UDP') in packet[4]:
+                self.udp_number += 1
 
     def create_graphs(self):
         self.set_dicts()
@@ -214,6 +221,14 @@ class Sniffer():
         data = self.number_of_next_header
         x_labels = ["Quantidade de próximos cabeçalhos"]
         cairoplot.dot_line_plot("lenNextHeader.svg", data, 400, 200, axis = False, grid = True, x_labels = [' ',' '])
+
+        self.counts_udp_icmpv6()
+        size = len(self.filtered_list)
+        data = [ [self.icmpv6_number, size - self.icmpv6_number], [self.udp_number, size - self.udp_number]]
+        colors = [ (1,0.2,0), (1,1,0) ]
+        x_labels = ["ICMPv6", "UDP"]
+        cairoplot.vertical_bar_plot ( 'extra.svg', data, 400, 200, display_values = True, grid = True,
+                                      rounded_corners = True, stack = True, x_labels = x_labels, colors = colors )
 
     def set_dicts(self):
         """ Cria os seguintes dicionarios:

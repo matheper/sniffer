@@ -41,12 +41,23 @@ class App(object):
         self.format_grid()
         self.capturing = False
 
+        #buttons
+        self.btnIniciar = self.xml.get_widget("btnIniciar")
+        self.btnParar = self.xml.get_widget("btnParar")
+        self.btnCarregar = self.xml.get_widget("btnCarregar")
+        self.btnEstatisticas = self.xml.get_widget("btnEstatisticas")
+        self.btnGraficos = self.xml.get_widget("btnGraficos")
+        self.btnFiltrar = self.xml.get_widget("btnFiltrar")
+        self.btnLimpar = self.xml.get_widget("btnLimpar")
+        self.set_buttons()
+
     def start(self, widget, data):
         """ Start a captura dos pacotes
         """
         if not self.capturing:
             self.format_grid()
             self.capturing = True
+            self.set_buttons()
             gtk.gdk.threads_init()
             cap = threading.Thread(target=self.capture)
             cap.start()
@@ -72,6 +83,7 @@ class App(object):
         """
         if self.capturing:
             self.capturing = False
+            self.set_buttons()
 
     def filter(self, widget, data):
         """ Filtra os pacotes
@@ -167,6 +179,24 @@ class App(object):
         icmpv6.set_from_file('lenNextHeader.svg')
         nextHeader = self.graphsxml.get_widget("nextHeader")
         nextHeader.set_from_file('nextHeader.svg')
+
+    def set_buttons(self):
+        if self.capturing:
+            self.btnIniciar.set_state(gtk.STATE_INSENSITIVE)
+            self.btnParar.set_sensitive(True)
+            self.btnCarregar.set_state(gtk.STATE_INSENSITIVE)
+            self.btnEstatisticas.set_state(gtk.STATE_INSENSITIVE)
+            self.btnGraficos.set_state(gtk.STATE_INSENSITIVE)
+            self.btnFiltrar.set_state(gtk.STATE_INSENSITIVE)
+            self.btnLimpar.set_state(gtk.STATE_INSENSITIVE)
+        else:
+            self.btnIniciar.set_sensitive(True)
+            self.btnParar.set_state(gtk.STATE_INSENSITIVE)
+            self.btnCarregar.set_sensitive(True)
+            self.btnEstatisticas.set_sensitive(True)
+            self.btnGraficos.set_sensitive(True)
+            self.btnFiltrar.set_sensitive(True)
+            self.btnLimpar.set_sensitive(True)
 
 
 if __name__ == "__main__":
