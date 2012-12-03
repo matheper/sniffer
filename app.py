@@ -20,11 +20,6 @@ try:
 except:
     print "Erro ao importar sniffer."
     sys.exit(1)
-try:
-    import cairoplot, cairo
-except:
-    print "Erro ao importar cairoplot."
-    sys.exit(1)
 
 class App(object):
     """Sniffer Interface
@@ -162,23 +157,8 @@ class App(object):
         self.listbox_data = self.sniffer.capture_list
         self.listbox_update()
 
-    def create_graphs(self):
-        self.sniffer.set_dicts()
-        background = cairo.LinearGradient(300, 0, 300, 400)
-        background.add_color_stop_rgb(0,0.4,0.4,0.4)
-        background.add_color_stop_rgb(1.0,0.1,0.1,0.1)
-        data = self.sniffer.next_header_dict
-        cairoplot.donut_plot( "nextHeader.svg", data, 400, 200, gradient = True, shadow = True, inner_radius = 0.3 )
-        data = self.sniffer.address_type_dict
-        cairoplot.donut_plot( "addressType.svg", data, 400, 200, gradient = True, shadow = True, inner_radius = 0.3 )
-        data = self.sniffer.traffic_class_dict
-        cairoplot.donut_plot( "trafficClass.svg", data, 400, 200, gradient = True, shadow = True, inner_radius = 0.3 )
-        data = self.sniffer.number_of_next_header
-        x_labels = ["Quantidade de próximos cabeçalhos"]
-        cairoplot.dot_line_plot("lenNextHeader.svg", data, 400, 200, axis = False, grid = True, x_labels = [' ',' '])
-
     def open_graphs(self):
-        self.create_graphs()
+        self.sniffer.create_graphs()
         self.graphsglade = "graphs.glade"
         self.graphsxml = gtk.glade.XML(self.graphsglade)
         address = self.graphsxml.get_widget("addressType")

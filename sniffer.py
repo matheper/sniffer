@@ -1,6 +1,11 @@
 # -*- coding: utf8 -*-
-from scapy import all
-import netaddr
+try:
+    import cairoplot, cairo
+    from scapy import all
+    import netaddr
+except:
+    print "Erro ao importar pacotes."
+    sys.exit(1)
 
 INDEX = 0
 VALUE = ''
@@ -194,6 +199,21 @@ class Sniffer():
         for packet in self.capture_dict:
             if (58,'ICMPv6') in packet['next_header']:
                 self.icmpv6_number += 1
+
+    def create_graphs(self):
+        self.set_dicts()
+        background = cairo.LinearGradient(300, 0, 300, 400)
+        background.add_color_stop_rgb(0,0.4,0.4,0.4)
+        background.add_color_stop_rgb(1.0,0.1,0.1,0.1)
+        data = self.next_header_dict
+        cairoplot.donut_plot( "nextHeader.svg", data, 400, 200, gradient = True, shadow = True, inner_radius = 0.3 )
+        data = self.address_type_dict
+        cairoplot.donut_plot( "addressType.svg", data, 400, 200, gradient = True, shadow = True, inner_radius = 0.3 )
+        data = self.traffic_class_dict
+        cairoplot.donut_plot( "trafficClass.svg", data, 400, 200, gradient = True, shadow = True, inner_radius = 0.3 )
+        data = self.number_of_next_header
+        x_labels = ["Quantidade de próximos cabeçalhos"]
+        cairoplot.dot_line_plot("lenNextHeader.svg", data, 400, 200, axis = False, grid = True, x_labels = [' ',' '])
 
     def set_dicts(self):
         """ Cria os seguintes dicionarios:
