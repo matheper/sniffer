@@ -41,7 +41,7 @@ class App(object):
         self.format_grid()
         self.capturing = False
 
-        #buttons
+        # carrega botoes
         self.btnIniciar = self.xml.get_widget("btnIniciar")
         self.btnParar = self.xml.get_widget("btnParar")
         self.btnCarregar = self.xml.get_widget("btnCarregar")
@@ -53,8 +53,7 @@ class App(object):
         self.set_buttons()
 
     def start(self, widget, data):
-        """ Start a captura dos pacotes
-        """
+        """ Inicia a captura dos pacotes. """
         if not self.capturing:
             self.format_grid()
             self.capturing = True
@@ -80,29 +79,29 @@ class App(object):
         self.CriarColuna(self.listbox_header)
 
     def stop(self, widget, data):
-        """ Stop a captura dos pacotes
-        """
+        """ Para a captura dos pacotes. """
         if self.capturing:
             self.capturing = False
             self.set_buttons()
 
     def filter(self, widget, data):
-        """ Filtra os pacotes
-        """
+        """ Filtra os pacotes. """
         self.listbox_data = self.sniffer.capture_filter(self.entryFilter.get_text())
         self.listbox_update()
 
     def clear(self, widget, data):
+        """Limpa todos os filtros."""
         self.listbox_data = self.sniffer.capture_list
         self.listbox_update()
 
     def load(self, widget, data):
-        """Load file capture.cap."""
+        """Carrega arquivo capture.cap."""
         self.sniffer.read_file('capture.cap')
         self.listbox_data = self.sniffer.capture_list
         self.listbox_update()
 
     def statistics(self, widget, data):
+        """Abre janela com media de proximos cabecalhos e tabela de fluxo. """
         self.statsglade = "statistics.glade"
         self.statsxml = gtk.glade.XML(self.statsglade)
         self.lstStats = self.statsxml.get_widget("lstStatistics")
@@ -121,17 +120,17 @@ class App(object):
         print "teste"
 
     def graphcs(self, widget, data):
+        """Dispara acao que abre nova janela com graficos. """
         self.open_graphs()
 
     def captureClear(self, widget, data):
+        """Limpa listas de captura do sniffer. """
         self.sniffer.clearAll()
         self.listbox_data = self.sniffer.capture_list
         self.listbox_update()
 
     def quitMainWindow(self, widget, data):
-        """
-            Sai do loop principal de eventos, finalizando o programa
-        """
+        """ Sai do loop principal de eventos, finalizando o programa. """
         gtk.main_quit()
 
     def CriarColuna(self, colunas):
@@ -146,34 +145,30 @@ class App(object):
             self.lstConsulta.append_column(column)
 
     def ClearColunas(self):
-        """ Clear coluna da lista
-        """
+        """ Limpa colunas da lista. """
         for coluna in self.lstConsulta.get_columns():
             self.lstConsulta.remove_column(coluna)
 
     def listbox_update(self):
+        """Atualiza dados da listbox. """
         self.lstConsulta.set_model(self.get_dados(self.listbox_data, self.listbox_types))
 
     def get_dados(self,dados,types):
-        """ Add as linhas nas respectivas colunas
-        """
+        """ Adiciona as linhas nas respectivas colunas da listbox."""
         retorno = gtk.ListStore(*types)
         for dado in dados:
             retorno.append(dado)
         return retorno
 
     def capture(self):
+        """ Captura pacotes da rede. """
         while self.capturing:
             self.sniffer.get_packet()
             self.listbox_data = self.sniffer.capture_list
             self.listbox_update()
 
-    def read_file(self):
-        self.sniffer.read_file('/home/matheus/Downloads/captura/captura_ipv6_filter')
-        self.listbox_data = self.sniffer.capture_list
-        self.listbox_update()
-
     def open_graphs(self):
+        """ Carrega graficos gerados pelo sniffer em uma nova janela. """
         self.sniffer.create_graphs()
         self.graphsglade = "graphs.glade"
         self.graphsxml = gtk.glade.XML(self.graphsglade)
@@ -187,6 +182,7 @@ class App(object):
         nextHeader.set_from_file('nextHeader.svg')
 
     def set_buttons(self):
+        """Ativa ou desativo os botoes de captura e filtro. """
         if self.capturing:
             self.btnIniciar.set_state(gtk.STATE_INSENSITIVE)
             self.btnParar.set_sensitive(True)

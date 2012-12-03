@@ -60,13 +60,13 @@ class Sniffer():
         }
 
     def next_header_type(self, nxt):
-        """Retuns label for next header code."""
+        """Retorna label para codigo next header."""
         if self.extension_header.has_key(nxt):
             return (nxt,self.extension_header[nxt])
         return (nxt,'')
 
     def traffic_class_type(self, t_class):
-        """Returns label for traffic class code."""
+        """Retorna label para codigo traffic class."""
         if t_class >= 0 and t_class <= 7:
             return (t_class, "Tráfego controlado por congestionamento", self.traffic_dict[t_class])
         elif t_class <= 15:
@@ -186,6 +186,7 @@ class Sniffer():
         self.mean_next_header = total / len(self.capture_dict)
 
     def get_statistics(self):
+        """ Retorna lista exibida com meia de cabecalhos e tabela de fluxo"""
         self.set_flowlabel_list()
         self.set_mean_next_header()
         stats = []
@@ -208,6 +209,8 @@ class Sniffer():
                 self.udp_number += 1
 
     def create_graphs(self):
+        """ Cria graficos para nextHeader, addressType e trafficClass
+            Exporta como imagem para ser utilizado com o GTK."""
         self.set_dicts()
         background = cairo.LinearGradient(300, 0, 300, 400)
         background.add_color_stop_rgb(0,0.4,0.4,0.4)
@@ -259,4 +262,5 @@ class Sniffer():
             self.number_of_next_header.append(len(packet[4]))
 
     def clearAll(self):
+        """Limpa listas de captura do sniffer."""
         self.__init__()
