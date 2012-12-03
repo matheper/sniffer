@@ -176,6 +176,18 @@ class Sniffer():
             total += len(packet['next_header'])
         self.mean_next_header = total / len(self.capture_dict)
 
+    def get_statistics(self):
+        self.set_flowlabel_list()
+        self.set_mean_next_header()
+        stats = []
+        stats.append(("Media de proximos cabecalhos:", self.mean_next_header, "",""))
+        stats.append(("","","",""))
+        stats.append(("Tabela de Fluxo:","","",""))
+        stats.append(("IP Origem", "IP Destino", "Flowlabel","Pacotes"))
+        for flow in self.flowlabel_dict:
+            stats.append((flow[0], flow[1], str(flow[2]), str(len(self.flowlabel_dict[flow]))))
+        return stats
+
     def counts_icmpv6(self):
         """Contabiliza numero de pacotes ICMPv6 da captura."""
         self.icmpv6_number = 0
@@ -184,8 +196,12 @@ class Sniffer():
                 self.icmpv6_number += 1
 
     def set_dicts(self):
-        """ Cria dicionario com tipo de pacote e numero de vezes
-            que aparece na captura."""
+        """ Cria os seguintes dicionarios:
+            address_type = {Tipo de pacote : numero de vezes que aparece na captura}
+            traffic_class = {Classe de Trafego : numero de vezes que aparece na captura}
+            next_header = {Proximo Cabecalho : numero de vezes que aparece na captura}
+            number_of_next_header = [Quantidade de Proximos Cabecalhos do pacote]
+        """
 
         self.next_header_dict = {}
         self.address_type_dict = {}

@@ -93,6 +93,24 @@ class App(object):
         self.listbox_update()
 
     def statistics(self, widget, data):
+        self.statsglade = "statistics.glade"
+        self.statsxml = gtk.glade.XML(self.statsglade)
+        self.lstStats = self.statsxml.get_widget("lstStatistics")
+
+        for coluna in range(4):
+            titulo = ""
+            id = coluna
+            renderer = gtk.CellRendererText()
+            column = gtk.TreeViewColumn(titulo, renderer, text = id)
+            column.set_resizable(False)
+            self.lstStats.append_column(column)
+
+        self.listStats_types = [str,str,str,str]
+        self.listStats_data = self.sniffer.get_statistics()
+        self.lstStats.set_model(self.get_dados(self.listStats_data, self.listStats_types))
+        print "teste"
+
+    def graphcs(self, widget, data):
         self.open_graphs()
 
     def quitMainWindow(self, widget, data):
@@ -160,10 +178,6 @@ class App(object):
         cairoplot.dot_line_plot("lenNextHeader.svg", data, 400, 200, axis = False, grid = True, x_labels = [' ',' '])
 
     def open_graphs(self):
-        self.sniffer.next_header_dict = {}
-        self.sniffer.address_type_dict = {}
-        self.sniffer.traffic_class_dict = {}
-        self.sniffer.number_of_next_header = []
         self.create_graphs()
         self.graphsglade = "graphs.glade"
         self.graphsxml = gtk.glade.XML(self.graphsglade)
