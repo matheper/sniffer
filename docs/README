@@ -6,4 +6,4 @@ apt-get install libnet1-dev
 
 
 execute capture.py with sudo
-sudo python capture.py
+sudo python app.py
